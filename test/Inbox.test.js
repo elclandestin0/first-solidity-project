@@ -6,13 +6,15 @@ const ganache = require("ganache-cli");
 // It isn't camel cased as Web3 is a constructor
 const Web3 = require("web3");
 // instance of web3 with a ganache provider() as a test network
-const web3 = new Web3(ganache.provider());
-// The ABI and the Bytecode are the two returned objects 
+const ganacheProvider = ganache.provider();
+const web3 = new Web3(ganacheProvider);
+// The ABI and the Bytecode are the two returned objects
 // after we compile our contract
 const { interface, bytecode } = require("../compile");
 
 let accounts;
 let inbox;
+const INITIAL_STRING = "Hi there";
 
 beforeEach(async () => {
   // Get a list of all unlocked accounts
@@ -40,12 +42,28 @@ beforeEach(async () => {
     with the contract on the blockchain.
    */
   inbox = await new web3.eth.Contract(JSON.parse(interface))
-    .deploy({ data: bytecode, arguments: ["Hi there"] })
-    .send({ from: accounts[0], gas: '1000000' });
+    .deploy({ data: bytecode, arguments: [INITIAL_STRING] })
+    .send({ from: accounts[0], gas: "1000000" });
+
+  inbox.setProvider(ganacheProvider);
 });
 
 describe("Inbox contract", () => {
   it("Deploys a contract", () => {
-    console.log(inbox);
+    // First we need to assert that a default value is
+    // assigned to the contract. Second we need to assert
+    // that the `message` has successfully been set. We
+    // also need one more test that makes sure that we are
+    // able to successfully deploy a contract.
+
+    // We do this by asserting if an address exists in the
+    // inbox contract.
+    assert.ok(inbox.options.address);
+  });
+  // Check if the contract has a default message assigned.
+  it("Contains the default message", async () => {
+    // assign message to the message() getter function
+    const message = await inbox.methods.message().call();
+    assert.equal(message, INITIAL_STRING);
   });
 });
