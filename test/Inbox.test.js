@@ -49,7 +49,7 @@ beforeEach(async () => {
 });
 
 describe("Inbox contract", () => {
-  it("Deploys a contract", () => {
+  it("deploys a contract", () => {
     // First we need to assert that a default value is
     // assigned to the contract. Second we need to assert
     // that the `message` has successfully been set. We
@@ -61,9 +61,17 @@ describe("Inbox contract", () => {
     assert.ok(inbox.options.address);
   });
   // Check if the contract has a default message assigned.
-  it("Contains the default message", async () => {
+  it("contains the default message", async () => {
     // assign message to the message() getter function
     const message = await inbox.methods.message().call();
     assert.equal(message, INITIAL_STRING);
+  });
+
+  it("can change the message", async () => {
+    // send() is how we transact the message and change the
+    // state variables in our Inbox contract.
+    await inbox.methods.setMessage("New message").send({ from: accounts[0] });
+    const message = await inbox.methods.message().call();
+    assert.equal(message, "New message");
   });
 });
